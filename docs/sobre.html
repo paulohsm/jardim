@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>jardim</title>
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#1c1c1c">
+
+<style>
+  :root {
+    --bg: #111;
+    --text: #eee;
+    --muted: #999;
+    --link: #5bc88a;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f2f2f2;
+      --text: #111;
+      --muted: #666;
+      --link: #2a8a57;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f2f2f2;
+    --text: #111;
+    --muted: #666;
+    --link: #2a8a57;
+  }
+  :root[data-theme="dark"] {
+    --bg: #111;
+    --text: #eee;
+    --muted: #999;
+    --link: #5bc88a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    min-height: 100dvh;
+    padding: 24px 18px 48px;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    margin: 0 0 4px;
+  }
+
+  h2 {
+    font-size: 1.05rem;
+    margin: 2rem 0 0.5rem;
+  }
+
+  p, li {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  ul {
+    padding-left: 1.2rem;
+  }
+
+  a {
+    color: var(--link);
+  }
+
+  .backLink {
+    display: inline-block;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .muted {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+</style>
+
+<script>
+  // Aplica o mesmo modo de cor escolhido na página principal.
+  (function () {
+    try {
+      const mode = localStorage.getItem("jardim_color_mode");
+      if (mode === "light" || mode === "dark") {
+        document.documentElement.setAttribute("data-theme", mode);
+      }
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<h1>Sobre o jardim</h1>
+<p class="muted">Acionamento remoto do portão residencial pela internet.</p>
+
+<h2>O que é</h2>
+<p>
+  Portão Web é um sistema que permite abrir e fechar o portão eletrônico de uma residência a partir de qualquer lugar com
+  acesso à internet, sem depender do controle remoto físico original.
+</p>
+
+<h2>Como usar</h2>
+<p>
+  Na primeira vez que esta página é aberta em um navegador, é preciso cadastrar um código de acesso (um segredo no formato TOTP, o mesmo tipo usado por aplicativos de autenticação em duas etapas). Esse código é fornecido por quem administra o sistema e é salvo apenas no próprio navegador de quem o usa — nunca é enviado a nenhum servidor nem fica salvo neste site.
+</p>
+<p>
+  Depois desse cadastro único, basta abrir a página e tocar no botão "Acionar portão". A cada toque, o navegador calcula um código válido por apenas 30 segundos e o envia ao dispositivo instalado junto ao portão, que confere o código antes de acionar o motor.
+</p>
+<p>
+  O link "mudar código de acesso", na página principal, permite substituir o código salvo neste navegador por um novo, caso necessário.
+</p>
+
+<h2>Materiais e métodos</h2>
+<p><strong>Hardware instalado junto ao portão:</strong></p>
+<ul>
+  <li>Módulo ESP-01S (chip ESP8266), responsável por toda a lógica de validação e acionamento;</li>
+  <li>Adaptador USB com conversor WCH CH340G, fixado permanentemente à placa de controle remoto original do portão;</li>
+  <li>Transistor BC548, usado como chave eletrônica entre o ESP-01S e os contatos da placa original.</li>
+</ul>
+<p><strong>Comunicação:</strong></p>
+<ul>
+  <li>Protocolo MQTT sobre TLS, usando um serviço de broker em nuvem (EMQX Cloud);</li>
+  <li>O dispositivo junto ao portão se conecta por Wi-Fi e mantém uma conexão permanente com o broker;</li>
+  <li>Esta página se conecta ao mesmo broker a partir do navegador, usando MQTT sobre WebSocket.</li>
+</ul>
+<p><strong>Validação e segurança:</strong></p>
+<ul>
+  <li>Algoritmo TOTP (RFC 6238), com janela de validade de 30 segundos;</li>
+  <li>Proteção contra reenvio do mesmo código (replay), bloqueio temporário após tentativas inválidas consecutivas, e exigência de relógio sincronizado por NTP — tudo verificado inteiramente no dispositivo junto ao portão, nunca nesta página;</li>
+  <li>O código TOTP de cada pessoa autorizada nunca é publicado neste site nem enviado a qualquer servidor — fica salvo apenas no armazenamento local do navegador de quem o cadastrou.</li>
+</ul>
+<p><strong>Página web:</strong></p>
+<ul>
+  <li>HTML, CSS e JavaScript simples, sem frameworks, hospedados via GitHub Pages;</li>
+  <li>Código-fonte aberto, disponível no repositório do projeto.</li>
+</ul>
+
+<h2>Autoria</h2>
+<p>
+  Projeto conduzido por Paulo Santiago, com desenvolvimento de firmware e página assistidos por inteligência artificial para implementação de código e orientação técnica.
+</p>
+
+<a class="backLink" href="index.html">&larr; voltar</a>
+
+</body>
+</html>

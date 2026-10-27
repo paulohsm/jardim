@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>jardim</title>
+
+<!-- "Add to Home Screen" / PWA -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1c1c1c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="jardim">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<style>
+  :root {
+    --bg: #111;
+    --text: #eee;
+    --muted: #999;
+    --input-bg: #000;
+    --input-border: #444;
+    --icon-fill: #777;
+    --icon-fill-active: #eee;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f2f2f2;
+      --text: #111;
+      --muted: #666;
+      --input-bg: #fff;
+      --input-border: #ccc;
+      --icon-fill: #aaa;
+      --icon-fill-active: #111;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f2f2f2;
+    --text: #111;
+    --muted: #666;
+    --input-bg: #fff;
+    --input-border: #ccc;
+    --icon-fill: #aaa;
+    --icon-fill-active: #111;
+  }
+  :root[data-theme="dark"] {
+    --bg: #111;
+    --text: #eee;
+    --muted: #999;
+    --input-bg: #000;
+    --input-border: #444;
+    --icon-fill: #777;
+    --icon-fill-active: #eee;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 16px;
+  }
+
+  .topHalf {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .appIcon {
+    width: 220px;
+    height: 220px;
+    max-width: 60vw;
+    max-height: 60vw;
+    object-fit: contain;
+  }
+
+  .bottomHalf {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 12px;
+    gap: 18px;
+    width: 100%;
+  }
+
+  #setupView, #mainView {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  input {
+    font-size: 1rem;
+    text-align: center;
+    width: 100%;
+    max-width: 320px;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+
+  #triggerBtn {
+    font-size: 1.4rem;
+    font-weight: 600;
+    width: 100%;
+    max-width: 320px;
+    padding: 1.5rem;
+    border-radius: 20px;
+    border: none;
+    background: #3a7;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    box-shadow: 0 4px 0 #2d8;
+  }
+  #triggerBtn:active {
+    transform: scale(0.96) translateY(2px);
+    box-shadow: 0 2px 0 #2d8;
+  }
+  #triggerBtn:disabled {
+    background: #555;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  #saveSecretBtn, #cancelSecretBtn {
+    font-size: 1rem;
+    width: 100%;
+    max-width: 320px;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+  }
+  #saveSecretBtn { background: #3a7; color: #fff; }
+  #cancelSecretBtn { background: none; color: var(--muted); text-decoration: underline; }
+
+  #status {
+    font-size: 0.85rem;
+    color: var(--muted);
+    min-height: 1.2rem;
+  }
+
+  /* Precisa vencer a regra de #setupView/#mainView acima em
+     especificidade (seletor de ID), senao a classe "hidden" fica
+     presente no HTML mas sem efeito visual algum. */
+  #setupView.hidden, #mainView.hidden, .hidden { display: none; }
+
+  .footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding-top: 20px;
+  }
+  .themeRow {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+  }
+  .themeBtn {
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    cursor: pointer;
+  }
+  .themeBtn svg {
+    display: block;
+    stroke: var(--icon-fill);
+  }
+  .themeBtn.active svg {
+    stroke: var(--icon-fill-active);
+  }
+  .footerLink {
+    font-size: 0.75rem;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+    background: none;
+    border: none;
+  }
+</style>
+</head>
+<body>
+
+<!--
+  jardim — página de acionamento
+
+  Modelo de seguranca:
+    - Esta pagina NAO valida nada por conta propria. A validacao real
+      (codigo TOTP, janela de tempo, bloqueio de replay, bloqueio apos
+      tentativas invalidas) acontece inteiramente no firmware do Esp01s.
+    - A credencial MQTT usada aqui (jardim-app) e publica por
+      necessidade - visivel para quem inspecionar a pagina - mas só
+      publica no topico de comando, nada mais.
+    - O segredo TOTP (K) de cada pessoa NUNCA fica neste arquivo, nunca
+      e publicado no GitHub. Cada pessoa autorizada guarda o PRÓPRIO K
+      apenas no localStorage do PRÓPRIO navegador, numa configuracao
+      local, unica, feita por ela mesma.
+    - SUBSTITUA o espaco reservado abaixo pela senha real da credencial
+      jardim-app. Nao envie este arquivo, depois de preenchido, de
+      volta para o Claude.
+-->
+
+<div class="topHalf">
+  <h1>Portão Web</h1>
+  <img class="appIcon" src="icons/gate-transparent.png" alt="">
+</div>
+
+<div class="bottomHalf">
+  <div id="setupView">
+    <input
+      id="secretInput"
+      type="text"
+      placeholder="seu código TOTP (Base32)"
+      autocomplete="off"
+    >
+    <button id="saveSecretBtn">Salvar neste navegador</button>
+    <button id="cancelSecretBtn" class="hidden">Cancelar</button>
+  </div>
+
+  <div id="mainView" class="hidden">
+    <button id="triggerBtn" disabled>Acionar portão</button>
+  </div>
+
+  <div id="status">conectando...</div>
+</div>
+
+<div class="footer">
+  <div class="themeRow">
+    <button class="themeBtn" id="themeSystem" title="Seguir o sistema" aria-label="Seguir o sistema">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="13" rx="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
+    </button>
+    <button class="themeBtn" id="themeLight" title="Modo claro" aria-label="Modo claro">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"></circle>
+        <line x1="12" y1="2" x2="12" y2="4"></line>
+        <line x1="12" y1="20" x2="12" y2="22"></line>
+        <line x1="4.2" y1="4.2" x2="5.6" y2="5.6"></line>
+        <line x1="18.4" y1="18.4" x2="19.8" y2="19.8"></line>
+        <line x1="2" y1="12" x2="4" y2="12"></line>
+        <line x1="20" y1="12" x2="22" y2="12"></line>
+        <line x1="4.2" y1="19.8" x2="5.6" y2="18.4"></line>
+        <line x1="18.4" y1="5.6" x2="19.8" y2="4.2"></line>
+      </svg>
+    </button>
+    <button class="themeBtn" id="themeDark" title="Modo escuro" aria-label="Modo escuro">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.5A8.5 8.5 0 1 1 11.5 3 7 7 0 0 0 21 12.5z"></path>
+      </svg>
+    </button>
+  </div>
+  <span class="footerLink" id="resetLink">mudar código de acesso</span>
+  <a class="footerLink" href="sobre.html">sobre este aplicativo</a>
+</div>
+
+<script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.min.js"></script>
+<script>
+  // --- Configuracao da conexao MQTT ---
+  const MQTT_HOST = "e1c61c69.ala.us-east-1.emqxsl.com";
+  const MQTT_WS_PORT = 8084;
+  const MQTT_USERNAME = "jardim-app";
+  const MQTT_PASSWORD = "0c9e5e209f4acaacc079284ae05e74994a250e6ca722339c";
+  const TOPIC_CMD = "jardim/cmd";
+  const STORAGE_KEY = "jardim_totp_secret";
+  const THEME_KEY = "jardim_color_mode";
+
+  const statusEl = document.getElementById("status");
+  const setupView = document.getElementById("setupView");
+  const mainView = document.getElementById("mainView");
+  const secretInput = document.getElementById("secretInput");
+  const saveSecretBtn = document.getElementById("saveSecretBtn");
+  const cancelSecretBtn = document.getElementById("cancelSecretBtn");
+  const triggerBtn = document.getElementById("triggerBtn");
+  const resetLink = document.getElementById("resetLink");
+
+  function setStatus(text) {
+    statusEl.textContent = text;
+  }
+
+  // --- Modo de cor (system / light / dark), persistido no localStorage ---
+  const themeButtons = {
+    system: document.getElementById("themeSystem"),
+    light: document.getElementById("themeLight"),
+    dark: document.getElementById("themeDark"),
+  };
+
+  function applyTheme(mode) {
+    if (mode === "light" || mode === "dark") {
+      document.documentElement.setAttribute("data-theme", mode);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      mode = "system";
+    }
+    for (const key in themeButtons) {
+      themeButtons[key].classList.toggle("active", key === mode);
+    }
+  }
+
+  function setTheme(mode) {
+    if (mode === "system") {
+      localStorage.removeItem(THEME_KEY);
+    } else {
+      localStorage.setItem(THEME_KEY, mode);
+    }
+    applyTheme(mode);
+  }
+
+  themeButtons.system.addEventListener("click", () => setTheme("system"));
+  themeButtons.light.addEventListener("click", () => setTheme("light"));
+  themeButtons.dark.addEventListener("click", () => setTheme("dark"));
+
+  applyTheme(localStorage.getItem(THEME_KEY) || "system");
+
+  // --- Base32 (RFC 4648) -> bytes ---
+  function base32Decode(input) {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    input = input.replace(/=+$/, "").toUpperCase().replace(/\s+/g, "");
+    let bits = 0, value = 0;
+    const output = [];
+    for (const char of input) {
+      const idx = alphabet.indexOf(char);
+      if (idx === -1) continue;
+      value = (value << 5) | idx;
+      bits += 5;
+      if (bits >= 8) {
+        output.push((value >>> (bits - 8)) & 0xff);
+        bits -= 8;
+      }
+    }
+    return new Uint8Array(output);
+  }
+
+  // --- Codigo TOTP, mesmo algoritmo e parametros do firmware: HMAC-SHA1
+  // sobre o passo de tempo de 30s, mas sem o truncamento decimal do RFC
+  // 4226/6238 (pensado para digitacao humana). Os primeiros 8 bytes do
+  // digest sao expostos diretamente como 16 caracteres hexadecimais (64
+  // bits) — o codigo nunca e visto nem digitado por ninguem, so
+  // calculado e enviado automaticamente por este botao.
+  async function computeTotp(secretB32) {
+    const keyBytes = base32Decode(secretB32);
+    const counter = Math.floor(Date.now() / 1000 / 30);
+    const msg = new Uint8Array(8);
+    let c = BigInt(counter);
+    for (let i = 7; i >= 0; i--) {
+      msg[i] = Number(c & 0xffn);
+      c >>= 8n;
+    }
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
+    );
+    const sig = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, msg));
+    let hex = "";
+    for (let i = 0; i < 8; i++) {
+      hex += sig[i].toString(16).padStart(2, "0");
+    }
+    return hex;
+  }
+
+  // --- Alterna entre a tela de configuracao e a tela principal (um
+  // unico botao). "Cancelar" so aparece quando ja existe um codigo
+  // salvo (ou seja, quando a troca e opcional, nao obrigatoria).
+  function showSetup() {
+    setupView.classList.remove("hidden");
+    mainView.classList.add("hidden");
+    cancelSecretBtn.classList.toggle("hidden", !localStorage.getItem(STORAGE_KEY));
+  }
+
+  function showMain() {
+    setupView.classList.add("hidden");
+    mainView.classList.remove("hidden");
+  }
+
+  function refreshView() {
+    if (localStorage.getItem(STORAGE_KEY)) showMain(); else showSetup();
+  }
+
+  saveSecretBtn.addEventListener("click", () => {
+    const value = secretInput.value.trim();
+    if (!value) {
+      setStatus("digite um código válido");
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, value);
+    secretInput.value = "";
+    showMain();
+  });
+
+  cancelSecretBtn.addEventListener("click", () => {
+    secretInput.value = "";
+    showMain();
+  });
+
+  // "mudar código de acesso": so abre a tela de configuracao, nao apaga
+  // nada ainda - a substituicao so acontece se "Salvar" for clicado.
+  resetLink.addEventListener("click", () => {
+    showSetup();
+  });
+
+  refreshView();
+
+  // --- Conexao MQTT ---
+  const clientId = "jardim-app-web-" + Math.random().toString(16).slice(2);
+
+  const client = mqtt.connect(`wss://${MQTT_HOST}:${MQTT_WS_PORT}/mqtt`, {
+    clientId: clientId,
+    username: MQTT_USERNAME,
+    password: MQTT_PASSWORD,
+    protocolVersion: 4,
+    reconnectPeriod: 3000,
+  });
+
+  client.on("connect", () => {
+    setStatus("conectado");
+    triggerBtn.disabled = false;
+  });
+
+  client.on("reconnect", () => {
+    setStatus("reconectando...");
+    triggerBtn.disabled = true;
+  });
+
+  client.on("close", () => {
+    setStatus("desconectado");
+    triggerBtn.disabled = true;
+  });
+
+  client.on("error", (err) => {
+    setStatus("erro de conexão");
+    triggerBtn.disabled = true;
+    console.error("Erro MQTT:", err);
+  });
+
+  triggerBtn.addEventListener("click", async () => {
+    const secret = localStorage.getItem(STORAGE_KEY);
+    if (!secret) {
+      refreshView();
+      return;
+    }
+    let code;
+    try {
+      code = await computeTotp(secret);
+    } catch (err) {
+      setStatus("código salvo inválido");
+      console.error("Erro ao calcular TOTP:", err);
+      return;
+    }
+    client.publish(TOPIC_CMD, code, { qos: 1 }, (err) => {
+      if (err) {
+        setStatus("falha ao enviar");
+        console.error("Erro ao publicar:", err);
+      } else {
+        setStatus("comando enviado");
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
