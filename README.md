@@ -100,6 +100,27 @@ secret into the setup field, and it's saved only in that browser's own
 `localStorage`. From then on, pressing the button computes and sends a
 fresh code automatically.
 
+## Pushing to GitHub
+
+If this repository has local commits that aren't on GitHub yet:
+```
+git add -A
+git commit -m "your message"
+git push origin master
+```
+This needs network access to github.com from wherever you run it.
+
+## Publishing the page (GitHub Pages)
+
+1. Push this repository to GitHub (if the push itself fails, see
+   "Pushing to GitHub" below).
+2. On GitHub, go to **Settings → Pages**.
+3. Under "Build and deployment", choose **Deploy from a branch**.
+4. Pick branch **`master`** and folder **`/docs`**, then click **Save**.
+5. GitHub publishes the page at `https://<user>.github.io/<repo>/` —
+   usually within a minute or two. For this repository, that's
+   https://paulohsm.github.io/jardim/
+
 ## License
 
 No license has been chosen yet for this repository.

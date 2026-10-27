@@ -106,6 +106,29 @@ TOTP em Base32 no campo de configuração, e ele é salvo apenas no
 `localStorage` daquele navegador. A partir daí, apertar o botão
 calcula e envia um código novo automaticamente.
 
+## Enviando para o GitHub
+
+Se este repositório tiver commits locais que ainda não estão no GitHub:
+```
+git add -A
+git commit -m "sua mensagem"
+git push origin master
+```
+Isso exige acesso de rede a github.com no computador onde o comando for
+executado.
+
+## Publicando a página (GitHub Pages)
+
+1. Envie (push) este repositório para o GitHub (se o próprio push
+   falhar, veja "Enviando para o GitHub" abaixo).
+2. No GitHub, acesse **Settings → Pages**.
+3. Em "Build and deployment", escolha **Deploy from a branch**.
+4. Selecione a branch **`master`** e a pasta **`/docs`**, depois
+   clique em **Save**.
+5. O GitHub publica a página em `https://<usuario>.github.io/<repositorio>/`
+   — geralmente em um ou dois minutos. Para este repositório:
+   https://paulohsm.github.io/jardim/
+
 ## Licença
 
 Nenhuma licença foi escolhida ainda para este repositório.
